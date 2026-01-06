@@ -2,28 +2,27 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Icon from "@/components/ui/icon";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const leaderboard = [
-    { rank: 1, name: "ProGamer2077", score: 15420, avatar: "🏆" },
-    { rank: 2, name: "ShadowHunter", score: 14850, avatar: "⚔️" },
-    { rank: 3, name: "NightWolf", score: 13990, avatar: "🐺" },
-    { rank: 4, name: "DragonSlayer", score: 12760, avatar: "🐉" },
-    { rank: 5, name: "PhantomX", score: 11540, avatar: "👻" },
-  ];
+  const navigate = useNavigate();
 
   const admins = [
-    { name: "Admin_Zeus", role: "Владелец", avatar: "⚡", color: "bg-yellow-500" },
-    { name: "Mod_Athena", role: "Главный модератор", avatar: "🛡️", color: "bg-purple-500" },
-    { name: "Mod_Apollo", role: "Модератор", avatar: "🎯", color: "bg-blue-500" },
-    { name: "Helper_Nova", role: "Помощник", avatar: "✨", color: "bg-green-500" },
+    { name: "Турист-Вагнера", role: "Основатель сервера", avatar: "👑", color: "bg-yellow-500", status: "Глава сервера" },
+    { name: "Pancake", role: "Старший администратор", avatar: "⚡", color: "bg-purple-500", status: "Старший администратор" },
+    { name: "cj", role: "Младший администратор", avatar: "🛡️", color: "bg-blue-500", status: "Младший администратор" },
   ];
 
-  const stats = [
-    { label: "Участников", value: "2,847", icon: "Users" },
-    { label: "Онлайн", value: "342", icon: "Activity" },
-    { label: "Каналов", value: "25", icon: "Hash" },
-    { label: "Игр", value: "8", icon: "Gamepad2" },
+  const openFactions = [
+    { name: "МВД", icon: "Shield", color: "text-blue-500" },
+    { name: "ДПС", icon: "Car", color: "text-green-500" },
+    { name: "СОБР МВД", icon: "Swords", color: "text-red-500" },
+    { name: "Росгвардия", icon: "ShieldCheck", color: "text-purple-500" },
+  ];
+
+  const closedFactions = [
+    { name: "ФСБ", icon: "Lock", color: "text-red-600" },
+    { name: "ФСО", icon: "Lock", color: "text-orange-600" },
   ];
 
   return (
@@ -34,82 +33,47 @@ const Index = () => {
         <section className="container mx-auto px-4 pt-20 pb-32 text-center">
           <div className="animate-fade-in">
             <Badge className="mb-6 text-lg px-6 py-2 bg-primary/20 text-primary border-primary/50">
-              🎮 Киберспортивное комьюнити
+              🎮 Brick Rigs Russian Town
             </Badge>
-            <h1 className="text-6xl md:text-8xl font-black mb-6 bg-gradient-to-r from-primary via-purple-400 to-secondary bg-clip-text text-transparent leading-tight">
-              ELITE GAMING
+            <h1 className="text-5xl md:text-7xl font-black mb-6 bg-gradient-to-r from-primary via-purple-400 to-secondary bg-clip-text text-transparent leading-tight">
+              BRICK RIGS - RUSSIAN TOWN
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Профессиональный игровой сервер для настоящих чемпионов. Присоединяйся к лучшим!
+              Лучший сервер brick rigs только тут!
             </p>
             <div className="flex gap-4 justify-center flex-wrap">
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6 bg-secondary hover:bg-secondary/90 text-white font-semibold shadow-lg shadow-secondary/50 hover:shadow-secondary/70 transition-all hover:scale-105"
-                onClick={() => window.open('https://discord.com', '_blank')}
+                onClick={() => window.open('https://discord.gg/RuBxnxyEV5', '_blank')}
               >
                 <Icon name="MessageCircle" className="mr-2" size={24} />
-                Войти в Discord
+                Вступить в Discord сервер
               </Button>
               <Button 
                 size="lg" 
                 variant="outline"
                 className="text-lg px-8 py-6 border-2 border-primary/50 hover:bg-primary/10 font-semibold hover:scale-105 transition-all"
+                onClick={() => navigate('/forum')}
               >
-                <Icon name="Info" className="mr-2" size={24} />
-                Подробнее
+                <Icon name="MessageSquare" className="mr-2" size={24} />
+                Форум
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="text-lg px-8 py-6 border-2 border-yellow-500/50 hover:bg-yellow-500/10 font-semibold hover:scale-105 transition-all"
+                onClick={() => navigate('/admin')}
+              >
+                <Icon name="Shield" className="mr-2" size={24} />
+                Админ
               </Button>
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 animate-slide-up">
-            {stats.map((stat, index) => (
-              <Card key={index} className="p-6 bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:scale-105">
-                <Icon name={stat.icon as any} className="mx-auto mb-3 text-primary" size={32} />
-                <div className="text-3xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </Card>
-            ))}
           </div>
         </section>
 
         <section className="container mx-auto px-4 py-20">
           <div className="grid md:grid-cols-2 gap-12">
-            <div className="space-y-6 animate-fade-in">
-              <h2 className="text-4xl font-bold mb-8 flex items-center gap-3">
-                <Icon name="Trophy" className="text-primary" size={36} />
-                Топ Рейтинг
-              </h2>
-              <div className="space-y-4">
-                {leaderboard.map((player) => (
-                  <Card 
-                    key={player.rank} 
-                    className={`p-6 bg-card/70 backdrop-blur-sm border-border/50 hover:border-primary/50 transition-all hover:scale-[1.02] ${
-                      player.rank === 1 ? 'ring-2 ring-primary/50 shadow-lg shadow-primary/20' : ''
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`text-4xl ${player.rank === 1 ? 'animate-glow' : ''}`}>
-                        {player.avatar}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <Badge variant={player.rank === 1 ? "default" : "secondary"} className="text-xs">
-                            #{player.rank}
-                          </Badge>
-                          <span className="font-bold text-lg text-foreground">{player.name}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Icon name="Zap" className="text-primary" size={16} />
-                          <span className="text-muted-foreground font-semibold">{player.score.toLocaleString()} очков</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
             <div className="space-y-6 animate-fade-in">
               <h2 className="text-4xl font-bold mb-8 flex items-center gap-3">
                 <Icon name="Shield" className="text-secondary" size={36} />
@@ -120,8 +84,8 @@ const Index = () => {
                   <div>
                     <h3 className="text-2xl font-bold mb-3 text-foreground">Добро пожаловать!</h3>
                     <p className="text-muted-foreground leading-relaxed">
-                      Elite Gaming — это профессиональное игровое комьюнити для настоящих энтузиастов. 
-                      У нас вы найдёте команды для совместной игры, турниры с призами и дружескую атмосферу.
+                      Brick Rigs - Russian Town — это ролевой сервер в мире Brick Rigs. 
+                      У нас вы найдёте фракции, систему рангов и дружескую атмосферу.
                     </p>
                   </div>
                   
@@ -163,13 +127,68 @@ const Index = () => {
                       <div className={`w-12 h-12 ${admin.color} rounded-full flex items-center justify-center text-2xl shadow-lg`}>
                         {admin.avatar}
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <div className="font-bold text-foreground">{admin.name}</div>
                         <div className="text-sm text-muted-foreground">{admin.role}</div>
+                        <Badge className="text-xs mt-1" variant="secondary">{admin.status}</Badge>
                       </div>
                     </div>
                   ))}
                 </div>
+              </Card>
+            </div>
+
+            <div className="space-y-6 animate-fade-in">
+              <h2 className="text-4xl font-bold mb-8 flex items-center gap-3">
+                <Icon name="Users" className="text-primary" size={36} />
+                Фракции
+              </h2>
+              
+              <Card className="p-8 bg-card/70 backdrop-blur-sm border-border/50">
+                <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
+                  <Icon name="Unlock" className="text-green-500" size={24} />
+                  Открытые фракции
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {openFactions.map((faction, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-muted/20 hover:bg-muted/30 transition-all text-center">
+                      <Icon name={faction.icon as any} className={`mx-auto mb-2 ${faction.color}`} size={32} />
+                      <div className="font-bold text-foreground text-sm">{faction.name}</div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              <Card className="p-8 bg-card/70 backdrop-blur-sm border-border/50">
+                <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
+                  <Icon name="Lock" className="text-red-500" size={24} />
+                  Закрытые фракции
+                </h3>
+                <div className="space-y-3">
+                  {closedFactions.map((faction, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-red-950/20 border border-red-900/30 flex items-center gap-3">
+                      <Icon name={faction.icon as any} className={faction.color} size={28} />
+                      <div className="font-bold text-foreground">{faction.name}</div>
+                      <Badge variant="destructive" className="ml-auto text-xs">Закрыта</Badge>
+                    </div>
+                  ))}
+                  <div className="mt-4 p-3 rounded-lg bg-muted/10 text-center">
+                    <p className="text-sm text-muted-foreground italic">
+                      <Icon name="Info" className="inline mr-1" size={16} />
+                      Некоторые фракции временно закрыты
+                    </p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-8 bg-card/70 backdrop-blur-sm border-border/50">
+                <h3 className="text-2xl font-bold mb-6 text-foreground flex items-center gap-2">
+                  <Icon name="Trophy" className="text-primary" size={28} />
+                  Топ Рейтинг
+                </h3>
+                <p className="text-muted-foreground text-center py-8 italic">
+                  Пока нет игроков в рейтинге. Начните играть первым!
+                </p>
               </Card>
             </div>
           </div>
@@ -178,11 +197,8 @@ const Index = () => {
         <footer className="container mx-auto px-4 py-12 text-center border-t border-border/30">
           <div className="flex items-center justify-center gap-2 text-muted-foreground mb-4">
             <Icon name="Rocket" className="text-primary" size={24} />
-            <span className="font-semibold">Elite Gaming © 2026</span>
+            <span className="font-semibold">Brick Rigs - Russian Town</span>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Создано для настоящих геймеров. Все права защищены.
-          </p>
         </footer>
       </div>
     </div>
