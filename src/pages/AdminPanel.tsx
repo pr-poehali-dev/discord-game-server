@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { useNavigate } from "react-router-dom";
+import { getCurrentUser, getUsers, promoteToAdmin, demoteFromAdmin } from "@/lib/auth";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,18 @@ const AdminPanel = () => {
   const navigate = useNavigate();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [showLogin, setShowLogin] = useState(true);
+  const [allUsers, setAllUsers] = useState(getUsers());
+  const [showPromoteDialog, setShowPromoteDialog] = useState(false);
+  const [selectedUsername, setSelectedUsername] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.role === 'admin') {
+      setIsAuthorized(true);
+      setShowLogin(false);
+    }
+  }, []);
   
   const [admins, setAdmins] = useState<Admin[]>([
     { name: "Турист-Вагнера", role: "Основатель сервера", avatar: "👑", color: "bg-yellow-500", status: "Глава сервера" },
@@ -54,11 +67,33 @@ const AdminPanel = () => {
   const [newPlayerScore, setNewPlayerScore] = useState("");
 
   const handleLogin = (password: string) => {
-    if (password === "admin123") {
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.role === 'admin') {
       setIsAuthorized(true);
       setShowLogin(false);
     } else {
-      alert("Неверный пароль");
+      alert("У вас нет прав доступа к админ-панели");
+    }
+  };
+
+  const handlePromoteUser = () => {
+    if (selectedUsername && selectedRole) {
+      if (promoteToAdmin(selectedUsername, selectedRole)) {
+        setAllUsers(getUsers());
+        setShowPromoteDialog(false);
+        setSelectedUsername("");
+        setSelectedRole("");
+        alert(`Пользователь ${selectedUsername} назначен администратором`);
+      } else {
+        alert("Ошибка при назначении администратора");
+      }
+    }
+  };
+
+  const handleDemoteUser = (username: string) => {
+    if (demoteFromAdmin(username)) {
+      setAllUsers(getUsers());
+      alert(`У пользователя ${username} отобраны права администратора`);
     }
   };
 
@@ -106,30 +141,19 @@ const AdminPanel = () => {
   if (!isAuthorized) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900 flex items-center justify-center">
-        <Dialog open={showLogin} onOpenChange={setShowLogin}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Icon name="Shield" className="text-primary" size={24} />
-                Вход в админ-панель
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              handleLogin(formData.get('password') as string);
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Пароль администратора</label>
-                  <Input name="password" type="password" placeholder="Введите пароль" />
-                  <p className="text-xs text-muted-foreground mt-2">Только для TOURIST-WAGNERA</p>
-                </div>
-                <Button type="submit" className="w-full">Войти</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <Card className="p-8 max-w-md">
+          <div className="text-center space-y-4">
+            <Icon name="ShieldAlert" className="mx-auto text-destructive" size={64} />
+            <h2 className="text-2xl font-bold">Доступ запрещён</h2>
+            <p className="text-muted-foreground">
+              У вас нет прав для доступа к админ-панели. Войдите как администратор TOURIST-WAGNERA.
+            </p>
+            <Button onClick={() => navigate('/')} className="w-full">
+              <Icon name="Home" className="mr-2" size={18} />
+              На главную
+            </Button>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -193,22 +217,15 @@ const AdminPanel = () => {
               <Card className="p-6 bg-card/70 backdrop-blur-sm border-border/50">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Icon name="UserPlus" size={24} />
-                  Добавить администратора
+                  Выдать права администратора пользователю
                 </h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Input 
-                    placeholder="Никнейм" 
-                    value={newAdminName}
-                    onChange={(e) => setNewAdminName(e.target.value)}
-                  />
-                  <Input 
-                    placeholder="Должность" 
-                    value={newAdminRole}
-                    onChange={(e) => setNewAdminRole(e.target.value)}
-                  />
-                  <Button onClick={handleAddAdmin}>
-                    <Icon name="Plus" className="mr-2" size={18} />
-                    Добавить
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Выберите зарегистрированного пользователя и назначьте ему права администратора
+                  </p>
+                  <Button onClick={() => setShowPromoteDialog(true)}>
+                    <Icon name="Shield" className="mr-2" size={18} />
+                    Назначить администратора
                   </Button>
                 </div>
               </Card>
@@ -216,24 +233,27 @@ const AdminPanel = () => {
               <Card className="p-6 bg-card/70 backdrop-blur-sm border-border/50">
                 <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Icon name="Users" size={24} />
-                  Список администраторов
+                  Все пользователи
                 </h3>
                 <div className="space-y-3">
-                  {admins.map((admin, index) => (
+                  {allUsers.map((user, index) => (
                     <div key={index} className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 ${admin.color} rounded-full flex items-center justify-center text-2xl`}>
-                          {admin.avatar}
+                        <div className={`w-12 h-12 ${user.role === 'admin' ? 'bg-yellow-500' : 'bg-gray-500'} rounded-full flex items-center justify-center text-2xl`}>
+                          {user.role === 'admin' ? '👑' : '👤'}
                         </div>
                         <div>
-                          <div className="font-bold">{admin.name}</div>
-                          <div className="text-sm text-muted-foreground">{admin.role}</div>
-                          <Badge variant="outline" className="text-xs mt-1">{admin.status}</Badge>
+                          <div className="font-bold">{user.username}</div>
+                          <div className="text-sm text-muted-foreground">{user.status}</div>
+                          <Badge variant={user.role === 'admin' ? 'default' : 'outline'} className="text-xs mt-1">
+                            {user.role === 'admin' ? 'Администратор' : 'Пользователь'}
+                          </Badge>
                         </div>
                       </div>
-                      {admin.name !== "Турист-Вагнера" && (
-                        <Button variant="destructive" size="sm" onClick={() => handleRemoveAdmin(admin.name)}>
-                          <Icon name="Trash2" size={16} />
+                      {user.username !== "TOURIST-WAGNERA" && user.role === 'admin' && (
+                        <Button variant="destructive" size="sm" onClick={() => handleDemoteUser(user.username)}>
+                          <Icon name="UserMinus" size={16} className="mr-1" />
+                          Снять
                         </Button>
                       )}
                     </div>
@@ -375,6 +395,45 @@ const AdminPanel = () => {
           </Tabs>
         </section>
       </div>
+
+      <Dialog open={showPromoteDialog} onOpenChange={setShowPromoteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Icon name="Shield" className="text-primary" size={24} />
+              Назначить администратора
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Выберите пользователя</label>
+              <select
+                className="w-full p-2 rounded-md bg-muted border border-border"
+                value={selectedUsername}
+                onChange={(e) => setSelectedUsername(e.target.value)}
+              >
+                <option value="">-- Выберите пользователя --</option>
+                {allUsers.filter(u => u.role !== 'admin').map((user) => (
+                  <option key={user.username} value={user.username}>
+                    {user.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Должность</label>
+              <Input
+                placeholder="Например: Старший администратор"
+                value={selectedRole}
+                onChange={(e) => setSelectedRole(e.target.value)}
+              />
+            </div>
+            <Button onClick={handlePromoteUser} className="w-full" disabled={!selectedUsername || !selectedRole}>
+              Назначить
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

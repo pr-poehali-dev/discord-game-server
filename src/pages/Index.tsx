@@ -1,11 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import Icon from "@/components/ui/icon";
 import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { getCurrentUser, login, register, logout, type User } from "@/lib/auth";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [showRegister, setShowRegister] = useState(false);
+
+  useEffect(() => {
+    setCurrentUser(getCurrentUser());
+  }, []);
 
   const admins = [
     { name: "Турист-Вагнера", role: "Основатель сервера", avatar: "👑", color: "bg-yellow-500", status: "Глава сервера" },
@@ -25,11 +41,83 @@ const Index = () => {
     { name: "ФСО", icon: "Lock", color: "text-orange-600" },
   ];
 
+  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+    
+    const user = login(username, password);
+    if (user) {
+      setCurrentUser(user);
+      setShowLogin(false);
+    } else {
+      alert("Неверный логин или пароль");
+    }
+  };
+
+  const handleRegister = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const username = formData.get('username') as string;
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    
+    if (password !== confirmPassword) {
+      alert("Пароли не совпадают");
+      return;
+    }
+    
+    const user = register(username, password);
+    if (user) {
+      setCurrentUser(user);
+      setShowRegister(false);
+    } else {
+      alert("Пользователь с таким именем уже существует");
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    setCurrentUser(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-slate-900">
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjAzKSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-40"></div>
 
       <div className="relative z-10">
+        <header className="container mx-auto px-4 py-4 flex justify-between items-center border-b border-border/30">
+          <div className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            Brick Rigs
+          </div>
+          
+          <div className="flex items-center gap-3">
+            {currentUser ? (
+              <>
+                <Badge className="text-sm px-4 py-2">
+                  {currentUser.username}
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {currentUser.status}
+                </Badge>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Выйти
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="outline" size="sm" onClick={() => setShowLogin(true)}>
+                  Войти
+                </Button>
+                <Button size="sm" onClick={() => setShowRegister(true)}>
+                  Регистрация
+                </Button>
+              </>
+            )}
+          </div>
+        </header>
+
         <section className="container mx-auto px-4 pt-20 pb-32 text-center">
           <div className="animate-fade-in">
             <Badge className="mb-6 text-lg px-6 py-2 bg-primary/20 text-primary border-primary/50">
@@ -59,15 +147,17 @@ const Index = () => {
                 <Icon name="MessageSquare" className="mr-2" size={24} />
                 Форум
               </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="text-lg px-8 py-6 border-2 border-yellow-500/50 hover:bg-yellow-500/10 font-semibold hover:scale-105 transition-all"
-                onClick={() => navigate('/admin')}
-              >
-                <Icon name="Shield" className="mr-2" size={24} />
-                Админ
-              </Button>
+              {currentUser?.role === 'admin' && (
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="text-lg px-8 py-6 border-2 border-yellow-500/50 hover:bg-yellow-500/10 font-semibold hover:scale-105 transition-all"
+                  onClick={() => navigate('/admin')}
+                >
+                  <Icon name="Shield" className="mr-2" size={24} />
+                  Админ
+                </Button>
+              )}
             </div>
           </div>
         </section>
@@ -201,6 +291,76 @@ const Index = () => {
           </div>
         </footer>
       </div>
+
+      <Dialog open={showLogin} onOpenChange={setShowLogin}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Вход в аккаунт</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleLogin}>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Никнейм</label>
+                <Input name="username" placeholder="Введите никнейм" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Пароль</label>
+                <Input name="password" type="password" placeholder="Введите пароль" required />
+              </div>
+              <Button type="submit" className="w-full">Войти</Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Нет аккаунта?{" "}
+                <span 
+                  className="text-primary cursor-pointer hover:underline"
+                  onClick={() => {
+                    setShowLogin(false);
+                    setShowRegister(true);
+                  }}
+                >
+                  Зарегистрироваться
+                </span>
+              </p>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRegister} onOpenChange={setShowRegister}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Регистрация</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRegister}>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Никнейм</label>
+                <Input name="username" placeholder="Придумайте никнейм" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Пароль</label>
+                <Input name="password" type="password" placeholder="Придумайте пароль" required />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Повторите пароль</label>
+                <Input name="confirmPassword" type="password" placeholder="Повторите пароль" required />
+              </div>
+              <Button type="submit" className="w-full">Зарегистрироваться</Button>
+              <p className="text-xs text-center text-muted-foreground">
+                Уже есть аккаунт?{" "}
+                <span 
+                  className="text-primary cursor-pointer hover:underline"
+                  onClick={() => {
+                    setShowRegister(false);
+                    setShowLogin(true);
+                  }}
+                >
+                  Войти
+                </span>
+              </p>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
